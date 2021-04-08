@@ -15,8 +15,27 @@ pub type Query = HashMap<String, String>;
 
 #[cfg(feature = "with-tokio")]
 use crate::request::Reqwest as RequestImpl;
+#[cfg(feature = "with-smol")]
+use crate::smol_request::Srequest as RequestImpl;
 #[cfg(feature = "with-async-std")]
 use crate::surf_request::SurfRequest as RequestImpl;
+#[cfg(any(
+    feature = "with-tokio",
+    feature = "with-async-std",
+    feature = "with-smol"
+))]
+use async_std::fs::File;
+#[cfg(any(
+    feature = "with-tokio",
+    feature = "with-async-std",
+    feature = "with-smol"
+))]
+use async_std::path::Path;
+#[cfg(any(
+    feature = "with-tokio",
+    feature = "with-async-std",
+    feature = "with-smol"
+))]
 // #[cfg(feature = "with-async-std")]
 // use async_std::{fs::File, path::Path};
 // #[cfg(feature = "with-tokio")]
