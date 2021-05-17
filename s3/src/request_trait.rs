@@ -3,6 +3,7 @@ use hmac::Mac;
 use hmac::NewMac;
 use maybe_async::maybe_async;
 use std::io::Write;
+use tokio::io::AsyncWrite;
 use url::Url;
 
 use crate::bucket::Bucket;
@@ -24,6 +25,10 @@ pub trait Request {
     async fn response(&self) -> Result<Self::Response>;
     async fn response_data(&self, etag: bool) -> Result<(Vec<u8>, u16)>;
     async fn response_data_to_writer<T: Write + Send>(&self, writer: &mut T) -> Result<u16>;
+    async fn response_data_to_async_writer<T: AsyncWrite + Unpin + Send>(
+        &self,
+        writer: &mut T,
+    ) -> Result<u16>;
     async fn response_header(&self) -> Result<(Self::HeaderMap, u16)>;
     fn datetime(&self) -> DateTime<Utc>;
     fn bucket(&self) -> Bucket;

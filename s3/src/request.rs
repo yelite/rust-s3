@@ -6,6 +6,7 @@ use std::io::Write;
 use chrono::{DateTime, Utc};
 use maybe_async::maybe_async;
 use reqwest::{Client, Response};
+use tokio::io::{AsyncWrite, AsyncWriteExt};
 
 use crate::bucket::Bucket;
 use crate::command::Command;
@@ -127,6 +128,22 @@ impl<'a> Request for Reqwest<'a> {
 
         while let Some(item) = stream.next().await {
             writer.write_all(&item?)?;
+        }
+
+        Ok(status_code.as_u16())
+    }
+
+    async fn response_data_to_async_writer<T: AsyncWrite + Unpin + Send>(
+        &self,
+        writer: &mut T,
+    ) -> Result<u16> {
+        let response = self.response().await?;
+
+        let status_code = response.status();
+        let mut stream = response.bytes_stream();
+
+        while let Some(item) = stream.next().await {
+            writer.write_all(&item?).await?;
         }
 
         Ok(status_code.as_u16())

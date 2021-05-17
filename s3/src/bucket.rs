@@ -555,7 +555,8 @@ impl Bucket {
     /// let mut output_file = File::create("output_file").expect("Unable to create file");
     ///
     /// // Async variant with `tokio` or `async-std` features
-    /// let status_code = bucket.get_object_stream("/test.file", &mut output_file).await?;
+    /// let mut async_output_file = tokio::fs::File::create("async_output_file").await.expect("Unable to create file");
+    /// let status_code = bucket.get_object_stream("/test.file", &mut async_output_file).await?;
     ///
     /// // `sync` feature will produce an identical method
     /// #[cfg(feature = "sync")]
@@ -570,14 +571,14 @@ impl Bucket {
     /// # }
     /// ```
     #[maybe_async::maybe_async]
-    pub async fn get_object_stream<T: std::io::Write + Send, S: AsRef<str>>(
+    pub async fn get_object_stream<T: tokio::io::AsyncWrite + Unpin + Send, S: AsRef<str>>(
         &self,
         path: S,
         writer: &mut T,
     ) -> Result<u16> {
         let command = Command::GetObject;
         let request = RequestImpl::new(self, path.as_ref(), command);
-        request.response_data_to_writer(writer).await
+        request.response_data_to_async_writer(writer).await
     }
 
     /// Stream file from local path to s3, generic over T: Write.
